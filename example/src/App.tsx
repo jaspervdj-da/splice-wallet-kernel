@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import './App.css'
 import * as sdk from '@canton-network/dapp-sdk'
 import { createPingCommand } from './commands/createPingCommand'
-import { createTapCommand } from './commands/createTapCommand'
+import { createTapCommand, getHoldings } from './commands/createTapCommand'
 
 function App() {
     const [loading, setLoading] = useState(false)
@@ -28,7 +28,7 @@ function App() {
             .then((result) => {
                 console.log(result)
                 setStatus(result)
-                if (result.isNetworkConnected) {
+                if (result.isNetworkConnected && primaryParty) {
                     sdk.ledgerApi({
                         requestMethod: 'GET',
                         resource: '/v2/version',
@@ -69,7 +69,7 @@ function App() {
             provider.removeListener('accountsChanged', onAccountsChanged)
             provider.removeListener('statusChanged', onStatusChanged)
         }
-    }, [])
+    }, [primaryParty])
 
     // Second effect: request accounts only when connected
     useEffect(() => {
@@ -219,6 +219,12 @@ function App() {
                         onClick={createTapContract}
                     >
                         TAP
+                    </button>
+                    <button
+                        disabled={!primaryParty}
+                        onClick={() => getHoldings(primaryParty!)}
+                    >
+                        Hold?
                     </button>
                     <button
                         disabled={!primaryParty}
