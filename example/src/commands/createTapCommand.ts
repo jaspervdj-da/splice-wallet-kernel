@@ -3,21 +3,28 @@
 // Corresponds to the built-in canton-builtin-admin-workflow-ping DAR every participant initializes with
 
 import { TokenStandardClient } from '@canton-network/core-token-standard'
+import { ScanProxyClient } from '@canton-network/core-splice-client'
 import { pino } from 'pino'
 
 export const createTapCommand = async (party: string) => {
     const logger = pino({ name: 'main', level: 'debug' })
-    const baseUrl = 'http://scan.localhost:4000'
     const tokenStandardClient = new TokenStandardClient(
-        baseUrl,
+        'http://scan.localhost:4000',
         logger,
-        false // isAdmin,
+        false // isAdmin
     )
+    const scanProxyClient = new ScanProxyClient(
+        new URL('http://localhost:2000/api/validator'),
+        logger,
+        false // isAdmin
+    );
     const REQUESTED_AT_SKEW_MS = 60_000
     const registryInfo = await tokenStandardClient.get(
         '/registry/metadata/v1/info'
     )
     const instrumentAdmin = registryInfo.adminId
+    const amuletRules = await scanProxyClient.getAmuletRules();
+    console.log(amuletRules);
     const now = new Date()
     const tomorrow = new Date(now)
     tomorrow.setDate(tomorrow.getDate() + 1)
