@@ -180,9 +180,10 @@ function App() {
                                 console.log('Connecting to Wallet Gateway...')
                                 setLoading(true)
                                 sdk.connect()
-                                    .then(({ status }) => {
+                                    .then(({ status, sessionToken }) => {
                                         setLoading(false)
                                         setStatus(status)
+                                        console.log(sessionToken)
                                         setError('')
                                     })
                                     .catch((err) => {
