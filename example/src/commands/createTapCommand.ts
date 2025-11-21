@@ -17,14 +17,14 @@ export const createTapCommand = async (party: string) => {
         new URL('http://localhost:2000/api/validator'),
         logger,
         false // isAdmin
-    );
+    )
     const REQUESTED_AT_SKEW_MS = 60_000
     const registryInfo = await tokenStandardClient.get(
         '/registry/metadata/v1/info'
     )
     const instrumentAdmin = registryInfo.adminId
-    const amuletRules = await scanProxyClient.getAmuletRules();
-    console.log(amuletRules);
+    const amuletRules = await scanProxyClient.getAmuletRules()
+    console.log(amuletRules)
     const now = new Date()
     const tomorrow = new Date(now)
     tomorrow.setDate(tomorrow.getDate() + 1)
