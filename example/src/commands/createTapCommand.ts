@@ -2,51 +2,54 @@
 // SPDX-License-Identifier: Apache-2.0
 // Corresponds to the built-in canton-builtin-admin-workflow-ping DAR every participant initializes with
 
-import { TokenStandardClient, HOLDING_INTERFACE_ID } from '@canton-network/core-token-standard'
+import {
+    TokenStandardClient,
+    HOLDING_INTERFACE_ID,
+} from '@canton-network/core-token-standard'
 import { ScanProxyClient } from '@canton-network/core-splice-client'
 import { pino } from 'pino'
 import * as sdk from '@canton-network/dapp-sdk'
 
-export const getHoldings = async (
-    party: string,
-): Promise<void> => {
+export const getHoldings = async (party: string): Promise<void> => {
     const latestPrunedOffsetsResponse = await sdk.ledgerApi({
         requestMethod: 'GET',
         resource: '/v2/state/latest-pruned-offsets',
     })
-    const activeAtOffset = JSON.parse(latestPrunedOffsetsResponse.response).participantPrunedUpToInclusive
-    console.log("activeAtOffset", activeAtOffset)
+    const activeAtOffset = JSON.parse(
+        latestPrunedOffsetsResponse.response
+    ).participantPrunedUpToInclusive
+    console.log('activeAtOffset', activeAtOffset)
     const activeContracts = await sdk.ledgerApi({
         requestMethod: 'POST',
         resource: '/v2/state/active-contracts',
         body: JSON.stringify({
             activeAtOffset,
             filter: {
-              "filtersByParty": {
-                [party]: {
-                  "cumulative": [
-                    {
-                      "identifierFilter": {
-                        "InterfaceFilter": {
-                          "value": {
-                            "interfaceId": HOLDING_INTERFACE_ID,
-                            "includeInterfaceView": true,
-                            "includeCreatedEventBlob": true
-                          }
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-        })
+                filtersByParty: {
+                    [party]: {
+                        cumulative: [
+                            {
+                                identifierFilter: {
+                                    InterfaceFilter: {
+                                        value: {
+                                            interfaceId: HOLDING_INTERFACE_ID,
+                                            includeInterfaceView: true,
+                                            includeCreatedEventBlob: true,
+                                        },
+                                    },
+                                },
+                            },
+                        ],
+                    },
+                },
+            },
+        }),
     })
-    console.log("active-contracts");
-    console.log(activeContracts);
+    console.log('active-contracts')
+    console.log(activeContracts)
 }
 
-export const createTapCommand = async (party: string) => {
+export const createTapCommand = async (party: string, sessionToken: string) => {
     const logger = pino({ name: 'main', level: 'debug' })
     const tokenStandardClient = new TokenStandardClient(
         'http://scan.localhost:4000',
@@ -56,7 +59,8 @@ export const createTapCommand = async (party: string) => {
     const scanProxyClient = new ScanProxyClient(
         new URL('http://localhost:2000/api/validator'),
         logger,
-        false // isAdmin
+        false, // isAdmin
+        sessionToken,
     )
     const REQUESTED_AT_SKEW_MS = 60_000
     const registryInfo = await tokenStandardClient.get(
@@ -95,18 +99,27 @@ export const createTapCommand = async (party: string) => {
         }
     )
     const disclosedContracts = transferFactory.choiceContext.disclosedContracts
-    console.log(disclosedContracts)
+    console.log('disclosedContracts', disclosedContracts)
+
+    const latestOpenMiningRound =
+        await scanProxyClient.getActiveOpenMiningRound()
+    console.log('latestOpenMiningRound', latestOpenMiningRound)
+
     return {
         commands: [
             {
-                CreateCommand: {
-                    createArguments: {
-                        id: `my-test-${new Date().getTime()}`,
-                        initiator: party,
-                        responder: party,
+                ExerciseCommand: {
+                    templateId: amuletRules.template_id!,
+                    contractId: amuletRules.contract_id,
+                    choice: 'AmuletRules_DevNet_Tap',
+                    choiceArgument: {
+                        receiver: choiceArgs.transfer.receiver,
+                        amount: choiceArgs.transfer.amount,
+                        openRound: latestOpenMiningRound!.contract_id,
                     },
                 },
             },
         ],
+        disclosedContracts,
     }
 }

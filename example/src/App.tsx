@@ -7,6 +7,7 @@ import { createTapCommand, getHoldings } from './commands/createTapCommand'
 function App() {
     const [loading, setLoading] = useState(false)
     const [status, setStatus] = useState<sdk.dappAPI.StatusEvent | undefined>()
+    const [sessionToken, setSessionToken] = useState<string | undefined>()
     const [errorMsg, setErrorMsg] = useState('')
     const [messages, setMessages] = useState<string[]>([])
     const [queryResponse, setQueryResponse] = useState<object | undefined>()
@@ -125,10 +126,10 @@ function App() {
     }
 
     function createTapContract() {
-        setError('')
+        setErrorMsg('')
         setLoading(true)
         const provider = window.canton
-        createTapCommand(primaryParty!).then((tapCommand) => {
+        createTapCommand(primaryParty!, sessionToken!).then((tapCommand) => {
             if (provider !== undefined) {
                 provider
                     .request({
@@ -141,7 +142,7 @@ function App() {
                     .catch((err) => {
                         console.error('Error creating ping contract:', err)
                         setLoading(false)
-                        setError(
+                        setErrorMsg(
                             err instanceof Error ? err.message : String(err)
                         )
                     })
@@ -182,9 +183,10 @@ function App() {
                                 setLoading(true)
                                 sdk.connect()
                                     .then(({ status, sessionToken }) => {
+                                        console.log(sessionToken)
                                         setLoading(false)
                                         setStatus(status)
-                                        console.log(sessionToken)
+                                        setSessionToken(sessionToken)
                                         setErrorMsg('')
                                     })
                                     .catch((err) => {
