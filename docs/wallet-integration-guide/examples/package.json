@@ -11,6 +11,7 @@
         "build": "tsc -b",
         "clean": "tsc -b --clean",
         "snippets": "yarn jest",
+        "run-00": "tsx ./scripts/00-tap-localnet.ts | pino-pretty",
         "run-01": "tsx ./scripts/01-auth.ts | pino-pretty",
         "run-02": "tsx ./scripts/02-auth-localnet.ts | pino-pretty",
         "run-03": "tsx ./scripts/03-ping-localnet.ts | pino-pretty",

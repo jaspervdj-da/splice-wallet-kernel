@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import './App.css'
 import * as sdk from '@canton-network/dapp-sdk'
 import { createPingCommand } from './commands/createPingCommand'
+import { createTapCommand } from './commands/createTapCommand'
 
 function App() {
     const [loading, setLoading] = useState(false)
@@ -122,6 +123,31 @@ function App() {
         }
     }
 
+    function createTapContract() {
+        setError('')
+        setLoading(true)
+        const provider = window.canton
+        createTapCommand(primaryParty!).then((tapCommand) => {
+            if (provider !== undefined) {
+                provider
+                    .request({
+                        method: 'prepareExecute',
+                        params: tapCommand,
+                    })
+                    .then(() => {
+                        setLoading(false)
+                    })
+                    .catch((err) => {
+                        console.error('Error creating ping contract:', err)
+                        setLoading(false)
+                        setError(
+                            err instanceof Error ? err.message : String(err)
+                        )
+                    })
+            }
+        })
+    }
+
     return (
         <div>
             <h1>Example dApp</h1>
@@ -187,6 +213,12 @@ function App() {
                         onClick={createPingContract}
                     >
                         create Ping contract
+                    </button>
+                    <button
+                        disabled={!primaryParty}
+                        onClick={createTapContract}
+                    >
+                        TAP
                     </button>
                     <button
                         disabled={!primaryParty}
