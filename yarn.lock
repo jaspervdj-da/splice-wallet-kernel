@@ -1888,6 +1888,8 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@canton-network/example@workspace:example"
   dependencies:
+    "@canton-network/core-token-standard": "workspace:^"
+    "@canton-network/core-types": "workspace:^"
     "@canton-network/dapp-sdk": "workspace:^"
     "@eslint/js": "npm:^9.25.0"
     "@playwright/test": "npm:^1.55.0"
@@ -1899,6 +1901,7 @@ __metadata:
     eslint-plugin-react-hooks: "npm:^5.2.0"
     eslint-plugin-react-refresh: "npm:^0.4.19"
     globals: "npm:^16.0.0"
+    pino: "npm:^10.0.0"
     react: "npm:^19.1.0"
     react-dom: "npm:^19.1.0"
     typescript: "npm:~5.8.3"

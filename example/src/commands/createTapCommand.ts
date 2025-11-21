@@ -3,12 +3,14 @@
 // Corresponds to the built-in canton-builtin-admin-workflow-ping DAR every participant initializes with
 
 import { TokenStandardClient } from '@canton-network/core-token-standard'
+import { pino } from 'pino'
 
 export const createTapCommand = async (party: string) => {
-    const baseUrl = 'http://scan.localhost:4000/api/scan/v0/scan-proxy'
+    const logger = pino({ name: 'main', level: 'debug' })
+    const baseUrl = 'http://scan.localhost:4000'
     const tokenStandardClient = new TokenStandardClient(
         baseUrl,
-        undefined!,
+        logger,
         false // isAdmin,
     )
     const REQUESTED_AT_SKEW_MS = 60_000
@@ -23,7 +25,7 @@ export const createTapCommand = async (party: string) => {
         expectedAdmin: instrumentAdmin,
         transfer: {
             sender: instrumentAdmin,
-            party,
+            receiver: party,
             amount: 10000,
             instrumentId: { admin: instrumentAdmin, id: 'Amulet' },
             lock: null,
