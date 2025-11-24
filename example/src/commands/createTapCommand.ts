@@ -3,27 +3,26 @@
 // Corresponds to the built-in canton-builtin-admin-workflow-ping DAR every participant initializes with
 
 import {
-    TokenStandardClient,
     HOLDING_INTERFACE_ID,
+    TokenStandardClient,
 } from '@canton-network/core-token-standard'
 import { ScanProxyClient } from '@canton-network/core-splice-client'
 import { pino } from 'pino'
+import { v4 } from 'uuid'
 import * as sdk from '@canton-network/dapp-sdk'
 
 export const getHoldings = async (party: string): Promise<void> => {
-    const latestPrunedOffsetsResponse = await sdk.ledgerApi({
+    const ledgerEnd = await sdk.ledgerApi({
         requestMethod: 'GET',
-        resource: '/v2/state/latest-pruned-offsets',
+        resource: '/v2/state/ledger-end',
     })
-    const activeAtOffset = JSON.parse(
-        latestPrunedOffsetsResponse.response
-    ).participantPrunedUpToInclusive
-    console.log('activeAtOffset', activeAtOffset)
+    const offset = JSON.parse(ledgerEnd.response).offset
+    console.log('ledgerEnd', ledgerEnd)
     const activeContracts = await sdk.ledgerApi({
         requestMethod: 'POST',
         resource: '/v2/state/active-contracts',
         body: JSON.stringify({
-            activeAtOffset,
+            activeAtOffset: offset,
             filter: {
                 filtersByParty: {
                     [party]: {
@@ -60,15 +59,13 @@ export const createTapCommand = async (party: string, sessionToken: string) => {
         new URL('http://localhost:2000/api/validator'),
         logger,
         false, // isAdmin
-        sessionToken,
+        sessionToken
     )
     const REQUESTED_AT_SKEW_MS = 60_000
     const registryInfo = await tokenStandardClient.get(
         '/registry/metadata/v1/info'
     )
     const instrumentAdmin = registryInfo.adminId
-    const amuletRules = await scanProxyClient.getAmuletRules()
-    console.log(amuletRules)
     const now = new Date()
     const tomorrow = new Date(now)
     tomorrow.setDate(tomorrow.getDate() + 1)
@@ -101,6 +98,9 @@ export const createTapCommand = async (party: string, sessionToken: string) => {
     const disclosedContracts = transferFactory.choiceContext.disclosedContracts
     console.log('disclosedContracts', disclosedContracts)
 
+    const amuletRules = await scanProxyClient.getAmuletRules()
+    console.log('amuletRules', amuletRules)
+
     const latestOpenMiningRound =
         await scanProxyClient.getActiveOpenMiningRound()
     console.log('latestOpenMiningRound', latestOpenMiningRound)
@@ -120,6 +120,10 @@ export const createTapCommand = async (party: string, sessionToken: string) => {
                 },
             },
         ],
+        commandId: v4(),
+        actAs: [party],
         disclosedContracts,
+        // userId
+        // synchronizerId
     }
 }
